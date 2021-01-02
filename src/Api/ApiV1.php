@@ -36,6 +36,12 @@
                         $this->authController->post_login();
                     }
                     break;
+                //forget password
+                case '/findid-backend/api/v1/forgot-password.php';
+                    if($method === 'POST') {
+                        $this -> authController -> post_forget_password();
+                    }
+                    break;
                 default:
                     header('http/1.1 404 not found');
                     echo json_encode(['status' => 'Error', 'message' => 'Not Found!']);

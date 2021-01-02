@@ -167,11 +167,12 @@ class AuthController {
     }
 
 
-    function get_forget_password()
+    public function post_forget_password() 
     {
         $email = $_POST['email'];
         $mail = new \PHPMailer\PHPMailer\PHPMailer;
         try {
+            //Find email in database
             $sql =  "SELECT * FROM users WHERE  email = :email";
             $stmt = $this->conn->prepare($sql);
             $stmt->bindParam(':email', $email, \PDO::PARAM_STR);
@@ -185,27 +186,55 @@ class AuthController {
                 throw new \Exception("An account with this  email does not exist.");
             }
 
-            $mail -> isSMTP();
-            $mail -> Host = 'kekwashie@gmail.com';
-            $mail -> SMTPAuth = true;
-            $mail -> Username = '';
-            $mail -> Password = '';
-            $mail -> SMTPSecure = 'tls';
-            $mail -> Port = 587;
+            //Generate token
+            $token = md5(time().rand());
+            echo $token . '<br>';
 
-            $mail -> setFrom('kekwashie@gmail.com', 'Found ID LLC');
-            $mail -> addAddress('recepient@gmail.com', 'Recipient Name');
+            //Add token to user database
+            $sql = 'UPDATE users SET token=:token WHERE email=:email';
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':email', $email, \PDO::PARAM_STR);
+            $stmt->bindParam(':token', $token, \PDO::PARAM_STR);
+            $stmt->execute();
+            $row = $stmt->rowCount();
+            $new_user = $stmt->fetch(\PDO::FETCH_ASSOC);
+            echo 'WHat' . $new_user;
+            var_dump($new_user);
+
+            //Send mail
+            $mail -> isSMTP();
+            $mail -> Host = $_ENV['MAIL_HOST'];
+            $mail -> SMTPAuth = true;
+            $mail -> Username = $_ENV['MAIL_HOST'];
+            $mail -> Password = $_ENV['MAIL_PASSWORD'];
+            $mail -> SMTPSecure = $_ENV['MAIL_SEC'];
+            $mail -> Port = $_ENV['MAIL_PORT'];
+
+            $mail -> setFrom($_ENV['MAIL_HOST'], $_ENV['MAIL_NAME']);
+            $mail -> addAddress('thomashasla4@gmail.com', 'Recipient Name');
             $mail -> isHTML(true);
             $mail -> Subject = 'Forgot Password';
             $mail -> Body = `
             <p>Hello {$user['first_name']}</p>
             <p>We received a request to reset your password. Click the link below to reset it: 
-            <a href="{$_ENV['DOMAIN']}/api/v1/reset-password?token={$user['token']}">Reset Password</a></p>
+            <a href="{$_ENV['DOMAIN']}/api/v1/reset-password?token={$token}">Reset Password</a></p>
             <p>If you didn\'t request a password reset, you can ignore this email</p>
             <p>Thanks <b>Your Website Team</p>
             `;
-        } catch (\Throwable $e) {
+            $mail -> send();
+            return json_encode([
+                'status' => 'success',
+                'message' => 'Email has been sent'
+            ]);
 
+        } catch (\Throwable $e) {
+            $response = [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ];
+
+            header("Content-Type: application/json");
+            echo json_encode($response);
         }
     }
 
