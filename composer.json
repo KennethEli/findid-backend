@@ -1,0 +1,15 @@
+{
+    "name": "elikobby/findid-backend",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "KennethEli",
+            "email": "117165849+KennethEli@users.noreply.github.com"
+        }
+    ],
+    "require": {}
+}
