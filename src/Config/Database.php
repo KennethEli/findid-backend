@@ -6,10 +6,6 @@ namespace App\Config;
 class Database {
 
     private static ?Database $instance = null;
-    private $dns;
-    private $domain;
-    private $username;
-    private $password;
     private $conn;
 
     private function __construct () {
@@ -18,13 +14,7 @@ class Database {
         header("Access-Control-Allow-Methods: *");
 
         try{
-            $this->dns = "mysql:host=localhost;dbname=foundid;
-            ssl-ca=path/to/ca.pem;ssl-cert=path/to/client-cert.pem;
-            ssl-key=path/to/client-key;";
-            $this -> username = "root";
-            $this -> password = "";
-            $this -> conn = new \PDO($this -> dns, $this -> username, $this -> password);
-            $this -> domain = 'localhost/findid-backend';
+            $this -> conn = new \PDO($_ENV['DNS'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD']);
             $this -> conn -> setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         } catch (\PDOException $e) {
@@ -32,7 +22,9 @@ class Database {
         }
     }
     
-    private function __clone() {}
+    private function __clone() {
+        //PREVENT CLASS FROM BEING CLONED
+    }
     
     public static function getInstance() {
         if(self::$instance === null) {

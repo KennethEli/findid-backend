@@ -1,15 +1,15 @@
 <?php
-
+  namespace App\Router;
   class Tangent {
     private static ?\App\Router\MainRouter $router = null;
 
     public function __construct() {
-      $this->router = new \App\Router\MainRouter();
+      $this->router = \App\Router\MainRouter::init();
     }
 
     public static function Router() {
       if (self::$router === null) {
-        self::$router = new \App\Router\MainRouter();
+        self::$router = \App\Router\MainRouter::init();
       }
       return self::$router;
     }

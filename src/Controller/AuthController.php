@@ -101,6 +101,10 @@ class AuthController {
     public function post_login()
     {
         try {
+            if( !isset($_POST['email']) || !isset($_POST['password'])){
+                http_response_code(403);
+                throw new \Exception('Invalid input');
+            }
             $email = $_POST['email'];
             $password = $_POST['password'];
 
@@ -126,6 +130,11 @@ class AuthController {
             }
             // Set the response header to JSON
             header("Content-Type: application/json");
+
+            //Generate Token
+            $data = ['user_id' => $user['id'], 'email' =>$user['email'], 'username' => $user['username']];
+            $token = \Firebase\JWT\JWT::encode($data, $_ENV['JWT_SECRET'],'HS256');
+            $user['token'] = $token;
 
             // Prepare the response data
             unset($user['password']);

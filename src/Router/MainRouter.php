@@ -7,37 +7,47 @@
     private string $method;
     private string $path;
 
-    public function __construct() {
+    private  function __construct() {
       $this -> uri = $_SERVER['REQUEST_URI'];
       $this -> method = $_SERVER['REQUEST_METHOD'];
       $this -> path = parse_url($this -> uri, PHP_URL_PATH);
     }
 
+    public static function init () :MainRouter  {
+      return new self();
+    }
 
-    public function get(string $uri, $controller ,callable $callback) {
+
+    public function get(string $uri, $controller ,callable $callback):void {
       if($this -> method === 'GET'  &&  $uri === $this -> path) {
-        call_user_func([$controller , $callback]);
+        $this -> addRoute($uri, $controller, $callback, $this -> method);      }
+    }
+    public function post(string $uri, $controller ,callable $callback) :void {
+      if($this -> method === 'POST'  &&  $uri === $this -> path) { 
+        $this -> addRoute($uri, $controller, $callback, $this -> method);
       }
     }
-    public function post(string $uri, $controller ,callable $callback) {
-      if($this -> method === 'POST'  &&  $uri === $this -> path) {
-        call_user_func([$controller , $callback]);
-      }
-    }
-    public function put(string $uri, $controller ,callable $callback) {
+    public function put(string $uri, $controller ,callable $callback) :void {
       if($this -> method === 'PUT'  &&  $uri === $this -> path) {
-        call_user_func([$controller , $callback]);
-      }
+        $this -> addRoute($uri, $controller, $callback, $this -> method);      }
     }
-    public function patch(string $uri, $controller ,callable $callback) {
+    public function patch(string $uri, $controller ,callable $callback) :void {
       if($this -> method === 'PATCH'  &&  $uri === $this -> path) {
-        call_user_func([$controller , $callback]);
+        $this -> addRoute($uri, $controller, $callback, $this -> method);      }
+    }
+    public function delete(string $uri, $controller ,callable $callback) :void {
+      if($this -> method === 'DELETE'  &&  $uri === $this -> path) {
+        $this -> addRoute($uri, $controller, $callback, $this -> method);
+        // call_user_func([$controller , $callback]);
       }
     }
-    public function delete(string $uri, $controller ,callable $callback) {
-      if($this -> method === 'DELETE'  &&  $uri === $this -> path) {
-        call_user_func([$controller , $callback]);
-      }
+    private function addRoute(string $uri, $controller, callable $callback, string $method) :void {
+      $this -> routes[] = [
+        'method' => $method,
+        'uri' => $uri,
+        'controller' => $controller,
+        'callable' => $callback
+      ];
     }
     public function match() :void {
       foreach($this -> routes as $route) {
