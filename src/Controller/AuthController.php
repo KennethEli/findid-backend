@@ -126,15 +126,16 @@ class AuthController {
             //check if provided password is correct
             if (md5($password)!== $user["password"]) {
                 http_response_code(403);
-                throw new \Exception("Invaild Credentials");
+                throw new \Exception("Invalid Credentials");
             }
             // Set the response header to JSON
             header("Content-Type: application/json");
 
             //Generate Token
             $data = ['user_id' => $user['id'], 'email' =>$user['email'], 'username' => $user['username']];
-            $token = \Firebase\JWT\JWT::encode($data, $_ENV['JWT_SECRET'],'HS256');
-            $user['token'] = $token;
+            $token = \App\Util\Utilities::jwt_encode($data);
+            header('Authorization: Bearer '.$token);
+            $user['token'] = 'Bearer: ' . $token;
 
             // Prepare the response data
             unset($user['password']);
@@ -168,6 +169,44 @@ class AuthController {
 
     function get_forget_password()
     {
+        $email = $_POST['email'];
+        $mail = new \PHPMailer\PHPMailer\PHPMailer;
+        try {
+            $sql =  "SELECT * FROM users WHERE  email = :email";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':email', $email, \PDO::PARAM_STR);
+            $stmt->execute();
+            $row = $stmt->rowCount();
+            $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            //check if email provided exist 
+            if (!$row > 0) {
+                http_response_code(404);
+                throw new \Exception("An account with this  email does not exist.");
+            }
+
+            $mail -> isSMTP();
+            $mail -> Host = 'kekwashie@gmail.com';
+            $mail -> SMTPAuth = true;
+            $mail -> Username = '';
+            $mail -> Password = '';
+            $mail -> SMTPSecure = 'tls';
+            $mail -> Port = 587;
+
+            $mail -> setFrom('kekwashie@gmail.com', 'Found ID LLC');
+            $mail -> addAddress('recepient@gmail.com', 'Recipient Name');
+            $mail -> isHTML(true);
+            $mail -> Subject = 'Forgot Password';
+            $mail -> Body = `
+            <p>Hello {$user['first_name']}</p>
+            <p>We received a request to reset your password. Click the link below to reset it: 
+            <a href="{$_ENV['DOMAIN']}/api/v1/reset-password?token={$user['token']}">Reset Password</a></p>
+            <p>If you didn\'t request a password reset, you can ignore this email</p>
+            <p>Thanks <b>Your Website Team</p>
+            `;
+        } catch (\Throwable $e) {
+
+        }
     }
 
     function post_reset_password()
